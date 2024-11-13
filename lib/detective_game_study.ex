@@ -8,7 +8,7 @@ defmodule DetectiveGameStudy do
   @alibi ["Solid alibi", "Shaky alibi", "No alibi"]
 
   @clue ["Suspicious footprint", "Torn piece of fabric", "Mysterious letter"]
-  _insight = ["Points to a suspect", "Leads to a new location", "Reveals a hidden motive"]
+  @insight ["Points to a suspect", "Leads to a new location", "Reveals a hidden motive"]
 
   @spec start_game(any(), any()) :: any()
   def start_game(victim_name, suspect_name) do
@@ -42,23 +42,25 @@ defmodule DetectiveGameStudy do
   def play(game_state) do
     IO.inspect(game_state, label: "Game State")
 
-    IO.gets(IO.ANSI.green() <> "What would you like to do? (investigate) > " <> IO.ANSI.reset())
+    IO.gets(
+      IO.ANSI.green() <>
+        "What would you like to do? (investigate, question, accuse, analyze or exit) > " <>
+        IO.ANSI.reset()
+    )
     |> String.trim()
     |> String.downcase()
     |> case do
       "investigate" ->
         investigate(game_state)
-
       "question" ->
         question(game_state)
-
       "accuse" ->
         accuse(game_state)
-
+      "analyze" ->
+        analyze(game_state)
       "exit" ->
         IO.puts("Goodbye!")
         :ok
-
       _ ->
         IO.puts("Invalid command. Try again.")
         play(game_state)
@@ -101,6 +103,18 @@ defmodule DetectiveGameStudy do
       play(game_state)
     end
   end
+
+  defp analyze(game_state) do
+    IO.puts("Analyzing clues...")
+    IO.puts(
+      case game_state[:case_file][:clues] do
+        [] -> "No clues to analyze."
+        clues -> "New insight: #{Enum.random(clues)} => #{Enum.random(@insight)}"
+      end
+    )
+    play(game_state)
+  end
+
 end
 
 # eg

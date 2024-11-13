@@ -30,6 +30,20 @@ defmodule DetectiveGameStudy do
       }
     ]
 
+    suspects =
+      if Enum.any?(suspects, fn suspect -> suspect["name"] == main_suspect_name end) do
+        suspects
+      else
+        [
+          %{
+            "name" => main_suspect_name,
+            "city" => Enum.random(@cities),
+            "relationship" => Enum.random(@relationships)
+          }
+          | suspects
+        ]
+      end
+
     case_data = %DetectiveGameStudy{
       victim: %{name: victim_name},
       suspects: suspects
@@ -59,7 +73,7 @@ defmodule DetectiveGameStudy do
   end
 
   def play(game_state) do
-    IO.inspect(game_state, label: "Game State")
+    IO.inspect(game_state, label: "Actual Information")
 
     IO.gets(
       IO.ANSI.light_green() <>

@@ -1,0 +1,3 @@
+%{
+  "rand_pcg": {:hex, :rand_pcg, "0.1.2", "67e2e5d1c1569d1c5550d5ace8d52c032ac44fe44f4be54611c2c467402875f4", [:mix], [], "hexpm", "fb10d261b85fb1fe5bf8b7622725655d54d97e0b811b2b22eaa8092af5bad114"},
+}

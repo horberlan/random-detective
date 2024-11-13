@@ -1,5 +1,5 @@
 defmodule DetectiveGameStudy do
-  defstruct victim: %{name: ""}, suspect: %{name: ""}, witness: %{statement: ""}
+  defstruct victim: %{name: ""}, suspects: [], witness: %{statement: ""}
 
   @cities ["City Park", "Downtown Alley", "Beachside"]
   @relationships ["Friend", "Neighbor", "Family member"]
@@ -10,17 +10,29 @@ defmodule DetectiveGameStudy do
   @clue ["Suspicious footprint", "Torn piece of fabric", "Mysterious letter"]
   @insight ["Points to a suspect", "Leads to a new location", "Reveals a hidden motive"]
 
-  @spec start_game(any(), any()) :: any()
-  def start_game(victim_name, suspect_name) do
-    _suspects = %{
-      "Suspect A" => %{city: Enum.random(@cities), relationship: Enum.random(@relationships)},
-      "Suspect B" => %{city: Enum.random(@cities), relationship: Enum.random(@relationships)},
-      "Suspect C" => %{city: Enum.random(@cities), relationship: Enum.random(@relationships)}
-    }
+  @spec start_game(String.t(), String.t()) :: any()
+  def start_game(victim_name, main_suspect_name) do
+    suspects = [
+      %{
+        "name" => "Suspect A",
+        "city" => Enum.random(@cities),
+        "relationship" => Enum.random(@relationships)
+      },
+      %{
+        "name" => "Suspect B",
+        "city" => Enum.random(@cities),
+        "relationship" => Enum.random(@relationships)
+      },
+      %{
+        "name" => "Suspect C",
+        "city" => Enum.random(@cities),
+        "relationship" => Enum.random(@relationships)
+      }
+    ]
 
     case_data = %DetectiveGameStudy{
       victim: %{name: victim_name},
-      suspect: %{name: suspect_name}
+      suspects: suspects
     }
 
     IO.puts("Welcome to the Detective Game!\nYour victim is: #{victim_name}")
@@ -33,8 +45,15 @@ defmodule DetectiveGameStudy do
       },
       leads: [
         %{name: "Witness", statement: Enum.random(@statements)},
-        %{name: "Suspect", alibi: Enum.random(@alibi), statement: Enum.random(@statements)}
-      ]
+        %{
+          # to not do conflitcs
+          role: "Main Suspect",
+          name: main_suspect_name,
+          alibi: Enum.random(@alibi),
+          statement: Enum.random(@statements)
+        }
+      ],
+      suspects: suspects
     }
     |> play()
   end
@@ -43,8 +62,8 @@ defmodule DetectiveGameStudy do
     IO.inspect(game_state, label: "Game State")
 
     IO.gets(
-      IO.ANSI.green() <>
-        "What would you like to do? (investigate, question, accuse, analyze or exit) > " <>
+      IO.ANSI.light_green() <>
+        "What would you like to do? (investigate, question, accuse, analyze, or exit) > " <>
         IO.ANSI.reset()
     )
     |> String.trim()
@@ -52,15 +71,20 @@ defmodule DetectiveGameStudy do
     |> case do
       "investigate" ->
         investigate(game_state)
+
       "question" ->
         question(game_state)
+
       "accuse" ->
         accuse(game_state)
+
       "analyze" ->
         analyze(game_state)
+
       "exit" ->
         IO.puts("Goodbye!")
         :ok
+
       _ ->
         IO.puts("Invalid command. Try again.")
         play(game_state)
@@ -68,18 +92,22 @@ defmodule DetectiveGameStudy do
   end
 
   defp investigate(game_state) do
-    # ao investigar gera um clue novo
+    # Generate a new clue upon investigation
     new_clue = Enum.random(@clue)
 
-    put_in(game_state[:case_file][:clues], [new_clue | game_state[:case_file][:clues]])
-    |> play()
+    updated_game_state =
+      put_in(game_state[:case_file][:clues], [new_clue | game_state[:case_file][:clues]])
 
     IO.puts(IO.ANSI.red() <> "Discovered: #{new_clue}" <> IO.ANSI.reset())
+    play(updated_game_state)
   end
 
   defp question(game_state) do
     lead = Enum.random(game_state[:leads])
-    IO.puts("Statement from #{lead[:name]}: #{lead[:statement]}")
+
+    IO.puts(
+      IO.ANSI.yellow() <> "Statement from #{lead[:name]}: #{lead[:statement]}" <> IO.ANSI.reset()
+    )
 
     updated_leads =
       Enum.map(game_state[:leads], fn current_lead ->
@@ -94,28 +122,37 @@ defmodule DetectiveGameStudy do
   end
 
   defp accuse(game_state) do
-    suspect = Enum.random(game_state[:leads])
-    # todo remove this dirt way 🗑️
+    suspect = Enum.random(game_state[:suspects])
+
     if Enum.random([true, false]) do
-      IO.puts("Accusation against #{suspect[:name]}: **SUCCESS**. Case closed!")
+      IO.puts(
+        IO.ANSI.green() <>
+          "Accusation against #{suspect["name"]}: **SUCCESS**. Case closed!" <> IO.ANSI.reset()
+      )
     else
-      IO.puts("Accusation against #{suspect[:name]}: **FAILURE**. Continue investigating.")
+      IO.puts(
+        IO.ANSI.red() <>
+          "Accusation against #{suspect["name"]}: **FAILURE**. Continue investigating." <>
+          IO.ANSI.reset()
+      )
+
       play(game_state)
     end
   end
 
   defp analyze(game_state) do
     IO.puts("Analyzing clues...")
+
     IO.puts(
       case game_state[:case_file][:clues] do
         [] -> "No clues to analyze."
         clues -> "New insight: #{Enum.random(clues)} => #{Enum.random(@insight)}"
       end
     )
+
     play(game_state)
   end
-
 end
 
-# eg
-# DetectiveGameStudy.start_game("joão", "maria")
+# Usage:
+# DetectiveGameStudy.start_game("João", "Maria")

@@ -49,7 +49,7 @@ defmodule DetectiveGameStudy do
       suspects: suspects
     }
 
-    IO.puts("Welcome to the Detective Game!\nYour victim is: #{victim_name}")
+    IO.puts("Welcome to the Detective Game! 🎲🕵️‍♂️ \nYour victim is: #{victim_name}")
 
     %{
       case_file: %{
@@ -73,40 +73,45 @@ defmodule DetectiveGameStudy do
   end
 
   def play(game_state) do
-    IO.inspect(game_state, label: "Actual Information")
-
-    IO.gets(
-      IO.ANSI.light_green() <>
-        "What would you like to do? (investigate, question, accuse, analyze, or exit) > " <>
-        IO.ANSI.reset()
+    IO.inspect(game_state,
+      label: "Actual Information",
+      syntax_colors: [atom: :cyan, string: :green, integer: :yellow, float: :magenta]
     )
+
+    get_input()
     |> String.trim()
     |> String.downcase()
-    |> case do
-      "investigate" ->
-        investigate(game_state)
+    |> do_action(game_state)
+  end
 
-      "question" ->
-        question(game_state)
+  defp do_action(action, game_state) do
+    valid_commands = ["investigate", "question", "accuse", "analyze", "exit"]
 
-      "accuse" ->
-        accuse(game_state)
+    if action in valid_commands do
+      case action do
+        "investigate" ->
+          investigate(game_state)
 
-      "analyze" ->
-        analyze(game_state)
+        "question" ->
+          question(game_state)
 
-      "exit" ->
-        IO.puts("Goodbye!")
-        :ok
+        "analyze" ->
+          analyze(game_state)
 
-      _ ->
-        IO.puts("Invalid command. Try again.")
-        play(game_state)
+        "accuse" ->
+          accuse(game_state)
+
+        "exit" ->
+          IO.puts("Goodbye!")
+          :ok
+      end
+    else
+      IO.puts("Command not found. use menu options.")
+      play(game_state)
     end
   end
 
   defp investigate(game_state) do
-    # Generate a new clue upon investigation
     new_clue = Enum.random(@clue)
 
     updated_game_state =
@@ -165,6 +170,14 @@ defmodule DetectiveGameStudy do
     )
 
     play(game_state)
+  end
+
+  defp get_input do
+    IO.gets(
+      IO.ANSI.light_green() <>
+        "What would you like to do? (investigate, question, accuse, analyze, or exit) > " <>
+        IO.ANSI.reset()
+    )
   end
 end
 

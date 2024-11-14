@@ -1,5 +1,5 @@
 defmodule DetectiveGameStudy do
-  defstruct victim: %{name: ""}, suspects: [], witness: %{statement: ""}
+  defstruct victim: %{name: ""}, suspects: [], witness: %{statement: ""}, progress: 0
 
   @locations ["City Park", "Downtown Alley", "B'eachside"]
   @relationships ["Friend", "Neighbor", "Family member"]
@@ -9,6 +9,7 @@ defmodule DetectiveGameStudy do
 
   @clues ["Suspicious footprint", "Torn piece of fabric", "Mysterious letter"]
   @insights ["Points to a suspect", "Leads to a new location", "Reveals a hidden motive"]
+  @valid_commands ["investigate", "question", "accuse", "analyze", "exit"]
 
   @spec start_game(String.t(), String.t()) :: any()
   def start_game(victim_name, main_suspect_name) do
@@ -49,7 +50,9 @@ defmodule DetectiveGameStudy do
       suspects: suspects
     }
 
-    IO.puts("Welcome to the Detective Game! 🎲🕵️‍♂️ \nYour victim is: #{victim_name}")
+    IO.puts(
+      "Welcome to the Detective Game 🎲🕵️‍♂️ \n Sua investigação será sobre o assasinatio de: #{victim_name}, apicultor da cidade."
+    )
 
     %{
       case_file: %{
@@ -60,7 +63,6 @@ defmodule DetectiveGameStudy do
       leads: [
         %{name: "Witness", statement: Enum.random(@statements)},
         %{
-          # to not do conflitcs
           role: "Main Suspect",
           name: main_suspect_name,
           alibi: Enum.random(@alibis),
@@ -85,33 +87,21 @@ defmodule DetectiveGameStudy do
   end
 
   defp do_action(action, game_state) do
-    valid_commands = ["investigate", "question", "accuse", "analyze", "exit"]
-
-    if action in valid_commands do
+    if action in @valid_commands do
       case action do
-        "investigate" ->
-          investigate(game_state)
-
-        "question" ->
-          question(game_state)
-
-        "analyze" ->
-          analyze(game_state)
-
-        "accuse" ->
-          accuse(game_state)
-
         "exit" ->
           IO.puts("Goodbye!")
           :ok
+
+        _ ->
+          apply(__MODULE__, String.to_atom(action), [game_state])
       end
     else
-      IO.puts("Command not found. use menu options.")
-      play(game_state)
+      IO.puts("Invalid command!")
     end
   end
 
-  defp investigate(game_state) do
+  def investigate(game_state) do
     new_clue = Enum.random(@clues)
 
     updated_game_state =
@@ -121,7 +111,7 @@ defmodule DetectiveGameStudy do
     play(updated_game_state)
   end
 
-  defp question(game_state) do
+  def question(game_state) do
     lead = Enum.random(game_state[:leads])
 
     IO.puts(
@@ -140,8 +130,9 @@ defmodule DetectiveGameStudy do
     play(%{game_state | leads: updated_leads})
   end
 
-  defp accuse(game_state) do
+  def accuse(game_state) do
     suspect = Enum.random(game_state[:suspects])
+    # todo: define valid_accusation based in progress
 
     if Enum.random([true, false]) do
       IO.puts(
@@ -159,7 +150,7 @@ defmodule DetectiveGameStudy do
     end
   end
 
-  defp analyze(game_state) do
+  def analyze(game_state) do
     IO.puts("Analyzing clues...")
 
     IO.puts(

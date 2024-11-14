@@ -16,16 +16,6 @@ defmodule DetectiveGame.MixProject do
       extra_applications: [:logger]
     ]
   end
-
-  def start(_type, _args) do
-    Application.ensure_all_started(:faker)
-
-    children = []
-
-    opts = [strategy: :one_for_one, name: YourApp.Supervisor]
-    Supervisor.start_link(children, opts)
-  end
-
   defp deps do
     [
       {:faker, "~> 0.18"}

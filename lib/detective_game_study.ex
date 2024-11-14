@@ -1,4 +1,7 @@
 defmodule DetectiveGameStudy do
+  @moduledoc """
+    iex> DetectiveGameStudy.start_game("João", "Maria")
+  """
   defstruct victim: %{name: ""}, suspects: [], witness: %{statement: ""}, progress: 0
 
   @locations ["City Park", "Downtown Alley", "B'eachside"]
@@ -51,7 +54,7 @@ defmodule DetectiveGameStudy do
     }
 
     IO.puts(
-      "Welcome to the Detective Game 🎲🕵️‍♂️ \n Sua investigação será sobre o assasinatio de: #{victim_name}, apicultor da cidade."
+      "Welcome to the Detective Game 🎲🕵️‍♂️ \n you are investigating the murder of #{victim_name}."
     )
 
     %{
@@ -98,6 +101,8 @@ defmodule DetectiveGameStudy do
       end
     else
       IO.puts("Invalid command!")
+      IO.inspect(@valid_commands, label: "valid commands")
+      play(game_state)
     end
   end
 
@@ -164,13 +169,12 @@ defmodule DetectiveGameStudy do
   end
 
   defp get_input do
+    commands = Enum.join(@valid_commands, ", ")
+
     IO.gets(
       IO.ANSI.light_green() <>
-        "What would you like to do? (investigate, question, accuse, analyze, or exit) > " <>
+        "What would you like to do? (#{commands}) > " <>
         IO.ANSI.reset()
     )
   end
 end
-
-# Usage:
-# DetectiveGameStudy.start_game("João", "Maria")

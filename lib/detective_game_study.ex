@@ -1,31 +1,31 @@
 defmodule DetectiveGameStudy do
   defstruct victim: %{name: ""}, suspects: [], witness: %{statement: ""}
 
-  @cities ["City Park", "Downtown Alley", "Beachside"]
+  @locations ["City Park", "Downtown Alley", "B'eachside"]
   @relationships ["Friend", "Neighbor", "Family member"]
 
   @statements ["I saw nothing.", "I was at home.", "I don't know what you're talking about."]
-  @alibi ["Solid alibi", "Shaky alibi", "No alibi"]
+  @alibis ["Solid alibi", "Shaky alibi", "No alibi"]
 
-  @clue ["Suspicious footprint", "Torn piece of fabric", "Mysterious letter"]
-  @insight ["Points to a suspect", "Leads to a new location", "Reveals a hidden motive"]
+  @clues ["Suspicious footprint", "Torn piece of fabric", "Mysterious letter"]
+  @insights ["Points to a suspect", "Leads to a new location", "Reveals a hidden motive"]
 
   @spec start_game(String.t(), String.t()) :: any()
   def start_game(victim_name, main_suspect_name) do
     suspects = [
       %{
         "name" => "Suspect A",
-        "city" => Enum.random(@cities),
+        "city" => Enum.random(@locations),
         "relationship" => Enum.random(@relationships)
       },
       %{
         "name" => "Suspect B",
-        "city" => Enum.random(@cities),
+        "city" => Enum.random(@locations),
         "relationship" => Enum.random(@relationships)
       },
       %{
         "name" => "Suspect C",
-        "city" => Enum.random(@cities),
+        "city" => Enum.random(@locations),
         "relationship" => Enum.random(@relationships)
       }
     ]
@@ -37,7 +37,7 @@ defmodule DetectiveGameStudy do
         [
           %{
             "name" => main_suspect_name,
-            "city" => Enum.random(@cities),
+            "city" => Enum.random(@locations),
             "relationship" => Enum.random(@relationships)
           }
           | suspects
@@ -54,7 +54,7 @@ defmodule DetectiveGameStudy do
     %{
       case_file: %{
         victim: case_data.victim.name,
-        location: Enum.random(@cities),
+        location: Enum.random(@locations),
         clues: []
       },
       leads: [
@@ -63,7 +63,7 @@ defmodule DetectiveGameStudy do
           # to not do conflitcs
           role: "Main Suspect",
           name: main_suspect_name,
-          alibi: Enum.random(@alibi),
+          alibi: Enum.random(@alibis),
           statement: Enum.random(@statements)
         }
       ],
@@ -112,7 +112,7 @@ defmodule DetectiveGameStudy do
   end
 
   defp investigate(game_state) do
-    new_clue = Enum.random(@clue)
+    new_clue = Enum.random(@clues)
 
     updated_game_state =
       put_in(game_state[:case_file][:clues], [new_clue | game_state[:case_file][:clues]])
@@ -165,7 +165,7 @@ defmodule DetectiveGameStudy do
     IO.puts(
       case game_state[:case_file][:clues] do
         [] -> "No clues to analyze."
-        clues -> "New insight: #{Enum.random(clues)} => #{Enum.random(@insight)}"
+        clues -> "New insight: #{Enum.random(clues)} => #{Enum.random(@insights)}"
       end
     )
 

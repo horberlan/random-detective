@@ -1,6 +1,8 @@
 defmodule DetectiveGameStudy do
   @moduledoc """
     iex> DetectiveGameStudy.start_game("João", "Maria")
+
+    using faker in this branch: https://github.com/elixirs/faker/blob/master/lib/faker
   """
   defstruct victim: %{name: ""}, suspects: [], witness: %{statement: ""}, progress: 0
 
@@ -14,22 +16,23 @@ defmodule DetectiveGameStudy do
   @insights ["Points to a suspect", "Leads to a new location", "Reveals a hidden motive"]
   @valid_commands ["investigate", "question", "accuse", "analyze", "exit"]
 
+  Faker.start()
   @spec start_game(String.t(), String.t()) :: any()
   def start_game(victim_name, main_suspect_name) do
     suspects = [
       %{
-        "name" => "Suspect A",
-        "city" => Enum.random(@locations),
+        "name" => Faker.Person.name(),
+        "city" => "##{Faker.Address.city()}",
         "relationship" => Enum.random(@relationships)
       },
       %{
-        "name" => "Suspect B",
-        "city" => Enum.random(@locations),
+        "name" => Faker.Person.name(),
+        "city" => "##{Faker.Address.city()}",
         "relationship" => Enum.random(@relationships)
       },
       %{
-        "name" => "Suspect C",
-        "city" => Enum.random(@locations),
+        "name" => Faker.Person.name(),
+        "city" => "##{Faker.Address.city()}",
         "relationship" => Enum.random(@relationships)
       }
     ]
@@ -41,7 +44,7 @@ defmodule DetectiveGameStudy do
         [
           %{
             "name" => main_suspect_name,
-            "city" => Enum.random(@locations),
+            "city" => "##{Faker.Address.city()}",
             "relationship" => Enum.random(@relationships)
           }
           | suspects

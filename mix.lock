@@ -1,3 +1,4 @@
 %{
+  "faker": {:hex, :faker, "0.18.0", "943e479319a22ea4e8e39e8e076b81c02827d9302f3d32726c5bf82f430e6e14", [:mix], [], "hexpm", "bfbdd83958d78e2788e99ec9317c4816e651ad05e24cfd1196ce5db5b3e81797"},
   "rand_pcg": {:hex, :rand_pcg, "0.1.2", "67e2e5d1c1569d1c5550d5ace8d52c032ac44fe44f4be54611c2c467402875f4", [:mix], [], "hexpm", "fb10d261b85fb1fe5bf8b7622725655d54d97e0b811b2b22eaa8092af5bad114"},
 }

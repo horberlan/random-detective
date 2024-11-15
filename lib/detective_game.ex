@@ -1,56 +1,42 @@
-defmodule DetectiveGameStudy do
+defmodule DetectiveGame do
   @moduledoc """
-    iex> DetectiveGameStudy.start_game("João", "Maria")
+    iex> DetectiveGame.start_game("João", "Maria")
   """
   defstruct victim: %{name: ""}, suspects: [], witness: %{statement: ""}, progress: 0
 
   @locations ["City Park", "Downtown Alley", "B'eachside"]
   @relationships ["Friend", "Neighbor", "Family member"]
-
   @statements ["I saw nothing.", "I was at home.", "I don't know what you're talking about."]
   @alibis ["Solid alibi", "Shaky alibi", "No alibi"]
-
   @clues ["Suspicious footprint", "Torn piece of fabric", "Mysterious letter"]
   @insights ["Points to a suspect", "Leads to a new location", "Reveals a hidden motive"]
+
   @valid_commands ["investigate", "question", "accuse", "analyze", "exit"]
 
-  @spec start_game(String.t(), String.t()) :: any()
+  Faker.start()
+
+  # todo change main_suspect_name logic, to the most avalueted suspect, initial value can be nil
   def start_game(victim_name, main_suspect_name) do
-    suspects = [
-      %{
-        "name" => "Suspect A",
-        "city" => Enum.random(@locations),
-        "relationship" => Enum.random(@relationships)
-      },
-      %{
-        "name" => "Suspect B",
-        "city" => Enum.random(@locations),
-        "relationship" => Enum.random(@relationships)
-      },
-      %{
-        "name" => "Suspect C",
-        "city" => Enum.random(@locations),
-        "relationship" => Enum.random(@relationships)
-      }
-    ]
+    suspects =
+      Enum.map(1..3, fn _ ->
+        %{
+          "name" => Faker.Person.name(),
+          "city" => Faker.Address.city(),
+          "relationship" => Enum.random(@relationships)
+        }
+      end)
 
     suspects =
       if Enum.any?(suspects, fn suspect -> suspect["name"] == main_suspect_name end) do
         suspects
       else
-        [
-          %{
-            "name" => main_suspect_name,
-            "city" => Enum.random(@locations),
-            "relationship" => Enum.random(@relationships)
-          }
-          | suspects
-        ]
+        [create_random_person_by_name(main_suspect_name) | suspects]
       end
 
-    case_data = %DetectiveGameStudy{
+    case_data = %DetectiveGame{
       victim: %{name: victim_name},
-      suspects: suspects
+      suspects: suspects,
+      progress: 0
     }
 
     IO.puts(
@@ -72,8 +58,10 @@ defmodule DetectiveGameStudy do
           statement: Enum.random(@statements)
         }
       ],
-      suspects: suspects
+      suspects: suspects,
+      progress: case_data.progress
     }
+    |> DetectiveGame.Log.start_game_log()
     |> play()
   end
 
@@ -94,6 +82,7 @@ defmodule DetectiveGameStudy do
       case action do
         "exit" ->
           IO.puts("Goodbye!")
+          DetectiveGame.Log.log_exit(game_state)
           :ok
 
         _ ->
@@ -109,11 +98,11 @@ defmodule DetectiveGameStudy do
   def investigate(game_state) do
     new_clue = Enum.random(@clues)
 
-    updated_game_state =
-      put_in(game_state[:case_file][:clues], [new_clue | game_state[:case_file][:clues]])
+    put_in(game_state[:case_file][:clues], [new_clue | game_state[:case_file][:clues]])
+    |> update_progress(10)
+    |> play()
 
     IO.puts(IO.ANSI.red() <> "Discovered: #{new_clue}" <> IO.ANSI.reset())
-    play(updated_game_state)
   end
 
   def question(game_state) do
@@ -132,26 +121,37 @@ defmodule DetectiveGameStudy do
         end
       end)
 
-    play(%{game_state | leads: updated_leads})
+    %{game_state | leads: updated_leads}
+    |> update_progress(5)
+    |> play()
   end
 
   def accuse(game_state) do
-    suspect = Enum.random(game_state[:suspects])
-    # todo: define valid_accusation based in progress
-
-    if Enum.random([true, false]) do
-      IO.puts(
-        IO.ANSI.green() <>
-          "Accusation against #{suspect["name"]}: **SUCCESS**. Case closed!" <> IO.ANSI.reset()
-      )
-    else
-      IO.puts(
-        IO.ANSI.red() <>
-          "Accusation against #{suspect["name"]}: **FAILURE**. Continue investigating." <>
-          IO.ANSI.reset()
-      )
-
+    if game_state.progress < 50 do
+      IO.puts("You need more clues and information before making an accusation.")
       play(game_state)
+    else
+      suspect = Enum.random(game_state[:suspects])
+
+      # todo: define valid_accusation based in progress
+      if Enum.random([true, false]) do
+        DetectiveGame.Log.log_victory(game_state)
+
+        IO.puts(
+          IO.ANSI.green() <>
+            "Accusation against #{suspect["name"]}: **SUCCESS**. Case closed!" <> IO.ANSI.reset()
+        )
+      else
+        DetectiveGame.Log.log_defeat(game_state)
+
+        IO.puts(
+          IO.ANSI.red() <>
+            "Accusation against #{suspect["name"]}: **FAILURE**. Continue investigating." <>
+            IO.ANSI.reset()
+        )
+
+        play(game_state)
+      end
     end
   end
 
@@ -161,11 +161,12 @@ defmodule DetectiveGameStudy do
     IO.puts(
       case game_state[:case_file][:clues] do
         [] -> "No clues to analyze."
+        nil -> "No clues to analyze."
         clues -> "New insight: #{Enum.random(clues)} => #{Enum.random(@insights)}"
       end
     )
 
-    play(game_state)
+    update_progress(game_state, 15) |> play()
   end
 
   defp get_input do
@@ -176,5 +177,18 @@ defmodule DetectiveGameStudy do
         "What would you like to do? (#{commands}) > " <>
         IO.ANSI.reset()
     )
+  end
+
+  def create_random_person_by_name(name) do
+    %{
+      "name" => name,
+      "city" => Faker.Address.city(),
+      "relationship" => Enum.random(@relationships)
+    }
+  end
+
+  defp update_progress(game_state, value) do
+    new_progress = game_state.progress + value
+    %{game_state | progress: min(new_progress, 100)}
   end
 end

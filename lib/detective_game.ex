@@ -15,25 +15,16 @@ defmodule DetectiveGame do
 
   Faker.start()
 
-  # todo change main suspect logic, to the most avalueted suspect, initial value can be nil
+  # todo change main_suspect_name logic, to the most avalueted suspect, initial value can be nil
   def start_game(victim_name, main_suspect_name) do
-    suspects = [
-      %{
-        "name" => Faker.Person.name(),
-        "city" => Faker.Address.city(),
-        "relationship" => Enum.random(@relationships)
-      },
-      %{
-        "name" => Faker.Person.name(),
-        "city" => Faker.Address.city(),
-        "relationship" => Enum.random(@relationships)
-      },
-      %{
-        "name" => Faker.Person.name(),
-        "city" => Faker.Address.city(),
-        "relationship" => Enum.random(@relationships)
-      }
-    ]
+    suspects =
+      Enum.map(1..3, fn _ ->
+        %{
+          "name" => Faker.Person.name(),
+          "city" => Faker.Address.city(),
+          "relationship" => Enum.random(@relationships)
+        }
+      end)
 
     suspects =
       if Enum.any?(suspects, fn suspect -> suspect["name"] == main_suspect_name end) do

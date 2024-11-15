@@ -15,7 +15,7 @@ defmodule DetectiveGame do
 
   Faker.start()
 
-  @spec start_game(String.t(), String.t()) :: any()
+  # todo change main suspect logic, to the most avalueted suspect, initial value can be nil
   def start_game(victim_name, main_suspect_name) do
     suspects = [
       %{
@@ -35,7 +35,6 @@ defmodule DetectiveGame do
       }
     ]
 
-    # Ensure the main_suspect_name is included
     suspects =
       if Enum.any?(suspects, fn suspect -> suspect["name"] == main_suspect_name end) do
         suspects
@@ -45,7 +44,8 @@ defmodule DetectiveGame do
 
     case_data = %DetectiveGame{
       victim: %{name: victim_name},
-      suspects: suspects
+      suspects: suspects,
+      progress: 0
     }
 
     IO.puts(
@@ -67,7 +67,8 @@ defmodule DetectiveGame do
           statement: Enum.random(@statements)
         }
       ],
-      suspects: suspects
+      suspects: suspects,
+      progress: case_data.progress
     }
     |> DetectiveGame.Log.start_game_log()
     |> play()
@@ -106,11 +107,11 @@ defmodule DetectiveGame do
   def investigate(game_state) do
     new_clue = Enum.random(@clues)
 
-    updated_game_state =
-      put_in(game_state[:case_file][:clues], [new_clue | game_state[:case_file][:clues]])
+    put_in(game_state[:case_file][:clues], [new_clue | game_state[:case_file][:clues]])
+    |> update_progress(10)
+    |> play()
 
     IO.puts(IO.ANSI.red() <> "Discovered: #{new_clue}" <> IO.ANSI.reset())
-    play(updated_game_state)
   end
 
   def question(game_state) do

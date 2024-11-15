@@ -129,7 +129,9 @@ defmodule DetectiveGame do
         end
       end)
 
-    play(%{game_state | leads: updated_leads})
+    %{game_state | leads: updated_leads}
+    |> update_progress(5)
+    |> play()
   end
 
   def accuse(game_state) do

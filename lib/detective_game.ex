@@ -10,6 +10,7 @@ defmodule DetectiveGame do
   @alibis ["Solid alibi", "Shaky alibi", "No alibi"]
   @clues ["Suspicious footprint", "Torn piece of fabric", "Mysterious letter"]
   @insights ["Points to a suspect", "Leads to a new location", "Reveals a hidden motive"]
+
   @valid_commands ["investigate", "question", "accuse", "analyze", "exit"]
 
   Faker.start()
@@ -180,12 +181,15 @@ defmodule DetectiveGame do
   end
 
   def create_random_person_by_name(name) do
-    person = %{
+    %{
       "name" => name,
       "city" => Faker.Address.city(),
       "relationship" => Enum.random(@relationships)
     }
+  end
 
-    person
+  defp update_progress(game_state, value) do
+    new_progress = game_state.progress + value
+    %{game_state | progress: min(new_progress, 100)}
   end
 end

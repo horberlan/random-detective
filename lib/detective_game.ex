@@ -133,26 +133,31 @@ defmodule DetectiveGame do
   end
 
   def accuse(game_state) do
-    suspect = Enum.random(game_state[:suspects])
-    # todo: define valid_accusation based in progress
-
-    if Enum.random([true, false]) do
-      DetectiveGame.Log.log_victory(game_state)
-
-      IO.puts(
-        IO.ANSI.green() <>
-          "Accusation against #{suspect["name"]}: **SUCCESS**. Case closed!" <> IO.ANSI.reset()
-      )
-    else
-      DetectiveGame.Log.log_defeat(game_state)
-
-      IO.puts(
-        IO.ANSI.red() <>
-          "Accusation against #{suspect["name"]}: **FAILURE**. Continue investigating." <>
-          IO.ANSI.reset()
-      )
-
+    if game_state.progress < 50 do
+      IO.puts("You need more clues and information before making an accusation.")
       play(game_state)
+    else
+      suspect = Enum.random(game_state[:suspects])
+
+      # todo: define valid_accusation based in progress
+      if Enum.random([true, false]) do
+        DetectiveGame.Log.log_victory(game_state)
+
+        IO.puts(
+          IO.ANSI.green() <>
+            "Accusation against #{suspect["name"]}: **SUCCESS**. Case closed!" <> IO.ANSI.reset()
+        )
+      else
+        DetectiveGame.Log.log_defeat(game_state)
+
+        IO.puts(
+          IO.ANSI.red() <>
+            "Accusation against #{suspect["name"]}: **FAILURE**. Continue investigating." <>
+            IO.ANSI.reset()
+        )
+
+        play(game_state)
+      end
     end
   end
 
@@ -167,7 +172,7 @@ defmodule DetectiveGame do
       end
     )
 
-    play(game_state)
+    update_progress(game_state, 15) |> play()
   end
 
   defp get_input do

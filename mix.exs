@@ -18,7 +18,8 @@ defmodule DetectiveGame.MixProject do
   end
   defp deps do
     [
-      {:faker, "~> 0.18"}
+      {:faker, "~> 0.18"},
+      {:scribe, "~> 0.11"}
     ]
   end
 end

@@ -16,7 +16,8 @@ defmodule DetectiveGame do
   @action_progression %{
     "investigate" => 10,
     "question" => 5,
-    "analyze" => 15
+    "analyze" => 15,
+    "min_to_accuse" => 40
   }
 
   Faker.start()
@@ -76,16 +77,7 @@ defmodule DetectiveGame do
   end
 
   def play(game_state) do
-    IO.inspect(game_state,
-      label: "Actual Information",
-      syntax_colors: [
-        atom: :cyan,
-        string: :green,
-        integer: :yellow,
-        number: :yellow,
-        float: :magenta
-      ]
-    )
+    inspect_highlight(game_state, "Actual Information")
 
     get_input()
     |> String.trim()
@@ -156,16 +148,14 @@ defmodule DetectiveGame do
   end
 
   def accuse(game_state) do
-    if game_state.progress < 50 do
+    if game_state.progress < @action_progression["min_to_accuse"] do
       IO.puts("You need more clues and information before making an accusation.")
       play(game_state)
     else
-      IO.inspect(Enum.with_index(game_state.suspects), label: "suspects:")
+      inspect_highlight(Enum.with_index(game_state.suspects), "suspects")
 
-      Enum.with_index(game_state.suspects)
-      |> Enum.each(fn {suspect, index} ->
-        IO.puts("#{index + 1}. #{suspect["name"]} (#{suspect["relationship"]})")
-      end)
+      game_state.suspects
+      |> Scribe.print(data: [{"Name", "name"}, {"Relationship", "relationship"}])
 
       accuse_suspect_by_index(game_state)
     end
@@ -225,5 +215,18 @@ defmodule DetectiveGame do
   defp update_progress(game_state, value) do
     new_progress = game_state.progress + value
     %{game_state | progress: min(new_progress, 100)}
+  end
+
+  defp inspect_highlight(game_state, label) do
+    IO.inspect(game_state,
+      label: label,
+      syntax_colors: [
+        atom: :cyan,
+        string: :green,
+        integer: :yellow,
+        number: :yellow,
+        float: :magenta
+      ]
+    )
   end
 end

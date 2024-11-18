@@ -1,9 +1,10 @@
 defmodule DetectiveGame.Log do
-  @moduledoc """
-  logging in game_log.log
-  """
 
   @log_file "game_log.log"
+
+  @moduledoc """
+  logging in #{@log_file}
+  """
 
   defp write_to_log(message) do
     File.write(@log_file, "#{message}\n", [:append])

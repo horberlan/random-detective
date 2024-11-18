@@ -13,6 +13,12 @@ defmodule DetectiveGame do
 
   @valid_commands ["investigate", "question", "accuse", "analyze", "exit"]
 
+  @action_progression %{
+    "investigate" => 10,
+    "question" => 5,
+    "analyze" => 15
+  }
+
   Faker.start()
 
   # todo change main_suspect_name logic, to the most avalueted suspect, initial value can be nil
@@ -30,7 +36,7 @@ defmodule DetectiveGame do
       if Enum.any?(suspects, fn suspect -> suspect["name"] == main_suspect_name end) do
         suspects
       else
-        [create_random_person_by_name(main_suspect_name) | suspects]
+        [create_person_by_name(main_suspect_name) | suspects]
       end
 
     case_data = %DetectiveGame{
@@ -50,7 +56,11 @@ defmodule DetectiveGame do
         clues: []
       },
       leads: [
-        %{name: "Witness", statement: Enum.random(@statements)},
+        %{
+          name: "Witness",
+          statement: Enum.random(@statements),
+          role: "Witness"
+        },
         %{
           role: "Main Suspect",
           name: main_suspect_name,
@@ -68,7 +78,13 @@ defmodule DetectiveGame do
   def play(game_state) do
     IO.inspect(game_state,
       label: "Actual Information",
-      syntax_colors: [atom: :cyan, string: :green, integer: :yellow, float: :magenta]
+      syntax_colors: [
+        atom: :cyan,
+        string: :green,
+        integer: :yellow,
+        float: :magenta,
+        number: :red
+      ]
     )
 
     get_input()
@@ -98,11 +114,11 @@ defmodule DetectiveGame do
   def investigate(game_state) do
     new_clue = Enum.random(@clues)
 
-    put_in(game_state[:case_file][:clues], [new_clue | game_state[:case_file][:clues]])
-    |> update_progress(10)
-    |> play()
-
     IO.puts(IO.ANSI.red() <> "Discovered: #{new_clue}" <> IO.ANSI.reset())
+
+    put_in(game_state[:case_file][:clues], [new_clue | game_state[:case_file][:clues]])
+    |> update_progress(@action_progression["investigate"])
+    |> play()
   end
 
   def question(game_state) do
@@ -122,8 +138,21 @@ defmodule DetectiveGame do
       end)
 
     %{game_state | leads: updated_leads}
-    |> update_progress(5)
+    |> update_progress(@action_progression["question"])
     |> play()
+  end
+
+  def analyze(game_state) do
+    IO.puts("Analyzing clues...")
+
+    IO.puts(
+      case game_state[:case_file][:clues] do
+        [] -> "No clues to analyze."
+        clues -> "New insight: #{Enum.random(clues)} => #{Enum.random(@insights)}"
+      end
+    )
+
+    update_progress(game_state, @action_progression["analyze"]) |> play()
   end
 
   def accuse(game_state) do
@@ -155,20 +184,6 @@ defmodule DetectiveGame do
     end
   end
 
-  def analyze(game_state) do
-    IO.puts("Analyzing clues...")
-
-    IO.puts(
-      case game_state[:case_file][:clues] do
-        [] -> "No clues to analyze."
-        nil -> "No clues to analyze."
-        clues -> "New insight: #{Enum.random(clues)} => #{Enum.random(@insights)}"
-      end
-    )
-
-    update_progress(game_state, 15) |> play()
-  end
-
   defp get_input do
     commands = Enum.join(@valid_commands, ", ")
 
@@ -179,7 +194,7 @@ defmodule DetectiveGame do
     )
   end
 
-  def create_random_person_by_name(name) do
+  def create_person_by_name(name) do
     %{
       "name" => name,
       "city" => Faker.Address.city(),

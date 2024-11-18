@@ -82,8 +82,8 @@ defmodule DetectiveGame do
         atom: :cyan,
         string: :green,
         integer: :yellow,
-        float: :magenta,
-        number: :red
+        number: :yellow,
+        float: :magenta
       ]
     )
 
@@ -160,27 +160,47 @@ defmodule DetectiveGame do
       IO.puts("You need more clues and information before making an accusation.")
       play(game_state)
     else
-      suspect = Enum.random(game_state[:suspects])
+      IO.inspect(Enum.with_index(game_state.suspects), label: "suspects:")
 
-      # todo: define valid_accusation based in progress
-      if Enum.random([true, false]) do
-        DetectiveGame.Log.log_victory(game_state)
+      Enum.with_index(game_state.suspects)
+      |> Enum.each(fn {suspect, index} ->
+        IO.puts("#{index + 1}. #{suspect["name"]} (#{suspect["relationship"]})")
+      end)
 
-        IO.puts(
-          IO.ANSI.green() <>
-            "Accusation against #{suspect["name"]}: **SUCCESS**. Case closed!" <> IO.ANSI.reset()
-        )
-      else
-        DetectiveGame.Log.log_defeat(game_state)
+      accuse_suspect_by_index(game_state)
+    end
+  end
 
-        IO.puts(
-          IO.ANSI.red() <>
-            "Accusation against #{suspect["name"]}: **FAILURE**. Continue investigating." <>
-            IO.ANSI.reset()
-        )
+  defp accuse_suspect_by_index(game_state) do
+    IO.puts("Enter the number of the suspect you want to accuse:")
 
-        play(game_state)
-      end
+    case IO.gets("> ") |> String.trim() |> Integer.parse() do
+      {index, ""} when index >= 1 and index <= length(game_state.suspects) ->
+        suspect = Enum.at(game_state.suspects, index - 1)
+
+        if Enum.random([true, false]) do
+          DetectiveGame.Log.log_victory(game_state)
+
+          IO.puts(
+            IO.ANSI.green() <>
+              "Accusation against #{suspect["name"]}: **SUCCESS**. Case closed!" <>
+              IO.ANSI.reset()
+          )
+        else
+          DetectiveGame.Log.log_defeat(game_state)
+
+          IO.puts(
+            IO.ANSI.red() <>
+              "Accusation against #{suspect["name"]}: **FAILURE**. Continue investigating." <>
+              IO.ANSI.reset()
+          )
+
+          play(game_state)
+        end
+
+      _ ->
+        IO.puts("Invalid selection. Please try again.")
+        accuse(game_state)
     end
   end
 

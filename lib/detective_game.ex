@@ -69,7 +69,7 @@ defmodule DetectiveGame do
           statement: Enum.random(@statements)
         }
       ],
-      suspects: suspects,
+      suspects: case_data.suspects,
       progress: case_data.progress
     }
     |> DetectiveGame.Log.start_game_log()
@@ -104,9 +104,16 @@ defmodule DetectiveGame do
   end
 
   def investigate(game_state) do
-    new_clue = Enum.random(@clues)
+    new_clue = %{
+      clue: Enum.random(@clues),
+      trailer_suspect: Enum.random(game_state[:suspects])["name"]
+    }
 
-    IO.puts(IO.ANSI.red() <> "Discovered: #{new_clue}" <> IO.ANSI.reset())
+    IO.puts(
+      IO.ANSI.red() <>
+        "Discovered: #{new_clue.clue} associated to #{new_clue.trailer_suspect}" <>
+        IO.ANSI.reset()
+    )
 
     put_in(game_state[:case_file][:clues], [new_clue | game_state[:case_file][:clues]])
     |> update_progress(@action_progression["investigate"])

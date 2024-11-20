@@ -115,8 +115,7 @@ defmodule DetectiveGame do
 
     game_state
     |> put_in([:case_file, :clues], updated_clues)
-    |> update_progress(@action_progression["investigate"])
-    |> define_main_suspect()
+    |> define_main_suspect() # and update progress
     |> play()
   end
 
@@ -233,8 +232,15 @@ defmodule DetectiveGame do
           Map.update(acc, suspect, 1, &(&1 + 1))
         end)
 
-      {main_suspect, _max_appearances} =
+      {main_suspect, main_suspect_appearances} =
         Enum.max_by(suspect_appearances, fn {_suspect, appearances} -> appearances end)
+
+      progress_value =
+        case main_suspect_appearances do
+          1 -> 5
+          2 -> 10
+          _ -> 15
+        end
 
       leads =
         Enum.map(game_state[:leads], fn lead ->
@@ -251,6 +257,7 @@ defmodule DetectiveGame do
         end)
 
       %{game_state | leads: leads}
+      |> update_progress(progress_value)
     end
   end
 end

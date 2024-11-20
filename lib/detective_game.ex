@@ -1,7 +1,9 @@
 defmodule DetectiveGame do
   @moduledoc """
-    iex> DetectiveGame.start_game("João", "Maria")
+    iex> DetectiveGame.start_game("João")
   """
+  import Utils.GeneralUtils, only: [inspect_highlight: 2]
+
   defstruct victim: %{name: ""}, suspects: [], witness: %{statement: ""}, progress: 0
 
   @locations ["City Park", "Downtown Alley", "B'eachside"]
@@ -22,8 +24,7 @@ defmodule DetectiveGame do
 
   Faker.start()
 
-  # todo change main_suspect_name logic, to the most avalueted suspect, initial value can be nil
-  def start_game(victim_name, main_suspect_name) do
+  def start_game(victim_name) do
     suspects =
       Enum.map(1..3, fn _ ->
         %{
@@ -32,13 +33,6 @@ defmodule DetectiveGame do
           "relationship" => Enum.random(@relationships)
         }
       end)
-
-    suspects =
-      if Enum.any?(suspects, fn suspect -> suspect["name"] == main_suspect_name end) do
-        suspects
-      else
-        [create_person_by_name(main_suspect_name) | suspects]
-      end
 
     case_data = %DetectiveGame{
       victim: %{name: victim_name},
@@ -64,9 +58,9 @@ defmodule DetectiveGame do
         },
         %{
           role: "Main Suspect",
-          name: main_suspect_name,
-          alibi: Enum.random(@alibis),
-          statement: Enum.random(@statements)
+          name: nil,
+          alibi: nil,
+          statement: nil
         }
       ],
       suspects: case_data.suspects,
@@ -104,6 +98,8 @@ defmodule DetectiveGame do
   end
 
   def investigate(game_state) do
+    clues = Map.get(game_state, :case_file, %{}) |> Map.get(:clues, [])
+
     new_clue = %{
       clue: Enum.random(@clues),
       trailer_suspect: Enum.random(game_state[:suspects])["name"]
@@ -115,8 +111,12 @@ defmodule DetectiveGame do
         IO.ANSI.reset()
     )
 
-    put_in(game_state[:case_file][:clues], [new_clue | game_state[:case_file][:clues]])
+    updated_clues = [new_clue | clues]
+
+    game_state
+    |> put_in([:case_file, :clues], updated_clues)
     |> update_progress(@action_progression["investigate"])
+    |> define_main_suspect()
     |> play()
   end
 
@@ -144,12 +144,18 @@ defmodule DetectiveGame do
   def analyze(game_state) do
     IO.puts("Analyzing clues...")
 
-    IO.puts(
-      case game_state[:case_file][:clues] do
-        [] -> "No clues to analyze."
-        clues -> "New insight: #{Enum.random(clues)} => #{Enum.random(@insights)}"
-      end
-    )
+    case game_state[:case_file][:clues] do
+      [] ->
+        IO.puts("No clues to analyze.")
+
+      clues ->
+        clue = Enum.random(clues)
+        insight = Enum.random(@insights)
+
+        IO.puts(
+          "New insight from \"#{clue.clue}\" associated with #{clue.trailer_suspect}: #{insight}"
+        )
+    end
 
     update_progress(game_state, @action_progression["analyze"]) |> play()
   end
@@ -211,29 +217,40 @@ defmodule DetectiveGame do
     )
   end
 
-  def create_person_by_name(name) do
-    %{
-      "name" => name,
-      "city" => Faker.Address.city(),
-      "relationship" => Enum.random(@relationships)
-    }
-  end
-
   defp update_progress(game_state, value) do
     new_progress = game_state.progress + value
     %{game_state | progress: min(new_progress, 100)}
   end
 
-  defp inspect_highlight(game_state, label) do
-    IO.inspect(game_state,
-      label: label,
-      syntax_colors: [
-        atom: :cyan,
-        string: :green,
-        integer: :yellow,
-        number: :yellow,
-        float: :magenta
-      ]
-    )
+  def define_main_suspect(game_state) do
+    clues = Map.get(game_state, :case_file, %{}) |> Map.get(:clues, [])
+
+    if Enum.empty?(clues) do
+      game_state
+    else
+      suspect_appearances =
+        Enum.reduce(clues, %{}, fn %{trailer_suspect: suspect}, acc ->
+          Map.update(acc, suspect, 1, &(&1 + 1))
+        end)
+
+      {main_suspect, _max_appearances} =
+        Enum.max_by(suspect_appearances, fn {_suspect, appearances} -> appearances end)
+
+      leads =
+        Enum.map(game_state[:leads], fn lead ->
+          if lead[:role] == "Main Suspect" do
+            %{
+              lead
+              | name: main_suspect,
+                alibi: Enum.random(@alibis),
+                statement: Enum.random(@statements)
+            }
+          else
+            lead
+          end
+        end)
+
+      %{game_state | leads: leads}
+    end
   end
 end
